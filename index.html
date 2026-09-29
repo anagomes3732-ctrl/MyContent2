@@ -1,0 +1,1188 @@
+```html
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full select-none">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Mycontent - Caderninho Inteligente</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f8f6fc',
+                            100: '#f0ebf8',
+                            200: '#e1d5f2',
+                            300: '#cbb3e8',
+                            400: '#ab86db',
+                            500: '#8b5bc7',
+                            600: '#7437a8', // Cor principal
+                            700: '#622b8f',
+                            800: '#522575',
+                            900: '#43205e',
+                        },
+                        darkText: '#202536',
+                        mutedText: '#7e839a',
+                        softBorder: '#ece8f5',
+                        pastel: {
+                            pink: '#fce4ec',
+                            purple: '#f3e5f5',
+                            blue: '#e1f5fe',
+                            sage: '#e8f5e9',
+                            peach: '#ffe0b2',
+                            yellow: '#fffde7',
+                            coral: '#ffabe1',
+                            beige: '#f5ebe0',
+                            slate: '#eceff1'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --sat: env(safe-area-inset-top);
+            --sab: env(safe-area-inset-bottom);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f6fc;
+            color: #202536;
+            overscroll-behavior-y: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Container Frame tipo App Nascido em Telas Mobile */
+        .app-shell {
+            max-width: 440px;
+            height: 100vh;
+            height: 100dvh;
+            position: relative;
+            overflow: hidden;
+            margin: 0 auto;
+            background-color: #f8f6fc;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 640px) {
+            .app-shell {
+                height: 90vh;
+                max-height: 880px;
+                border-radius: 40px;
+                box-shadow: 0 25px 50px -12px rgba(116, 55, 168, 0.12), 0 0 0 1px rgba(116, 55, 168, 0.05);
+                margin: 5vh auto;
+            }
+        }
+
+        /* Transição suave de telas */
+        .page {
+            transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            background-color: #f8f6fc;
+            overflow-y: auto;
+            padding-bottom: calc(82px + var(--sab));
+            z-index: 10;
+        }
+
+        .page.hidden-page {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.985);
+            z-index: 0;
+        }
+
+        /* Botão circular de checklist minimalista */
+        .step-circle {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid #cbb3e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            background-color: transparent;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .step-circle.checked {
+            background-color: #7437a8;
+            border-color: #7437a8;
+            transform: scale(1.05);
+        }
+
+        .step-circle.checked svg {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .step-circle svg {
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.2s ease;
+            color: white;
+            stroke-width: 3;
+        }
+
+        /* Efeito notebook sutil nas bordas superiores */
+        .paper-grain {
+            background-image: radial-gradient(#e1d5f2 0.5px, transparent 0.5px);
+            background-size: 14px 14px;
+        }
+
+        /* Scrollbar limpa */
+        ::-webkit-scrollbar {
+            width: 3px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e1d5f2;
+            border-radius: 10px;
+        }
+
+        /* Animação bottom-sheet modal */
+        .sheet-up {
+            animation: slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="sm:p-4 flex items-center justify-center min-h-screen">
+
+    <!-- Estrutura Principal do App -->
+    <div class="app-shell w-full relative">
+
+        <!-- TELAS DO APLICATIVO -->
+
+        <!-- 0. SPLASH / BOAS-VINDAS -->
+        <div id="page-splash" class="page z-50 p-7 flex flex-col justify-between items-center bg-gradient-to-b from-brand-50 via-white to-brand-50">
+            <div class="w-full text-center mt-10 space-y-3">
+                <div class="inline-flex p-4 bg-white rounded-3xl shadow-sm border border-brand-100/60 mb-2">
+                    <!-- SVG do Caderninho Inteligente com Check -->
+                    <svg class="w-12 h-12 text-brand-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                        <path d="m9 10 2 2 4-4" stroke-width="2.2" stroke="#7437a8"/>
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight text-darkText">Mycontent</h1>
+                <p class="text-xs text-mutedText font-medium">Seu caderninho inteligente de estudos</p>
+            </div>
+
+            <!-- Card Ilustrativo Delicado -->
+            <div class="w-full max-w-[280px] bg-white rounded-3xl p-6 border border-brand-100/80 shadow-sm space-y-4 text-center">
+                <div class="w-12 h-1 bg-brand-200 rounded-full mx-auto"></div>
+                <div class="space-y-1.5">
+                    <h2 class="text-xs font-semibold uppercase tracking-wider text-brand-600">Simples & Organizado</h2>
+                    <p class="text-xs text-mutedText leading-relaxed">Acompanhe sua evolução estudo a estudo: Teoria, Revisão e Questões.</p>
+                </div>
+                <div class="pt-2 flex justify-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-brand-400"></span>
+                    <span class="w-2 h-2 rounded-full bg-brand-200"></span>
+                    <span class="w-2 h-2 rounded-full bg-brand-100"></span>
+                </div>
+            </div>
+
+            <button onclick="startApp()" class="w-full py-4 bg-brand-600 hover:bg-brand-700 active:scale-[0.98] transition-all text-white font-semibold rounded-2xl shadow-sm text-xs flex items-center justify-center gap-2">
+                <span>Começar meus estudos</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <!-- 1. HOME / INÍCIO -->
+        <div id="page-home" class="page hidden-page">
+            <div class="p-6 pb-2 bg-brand-50/80 backdrop-blur sticky top-0 z-20 border-b border-softBorder/60">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <p class="text-[11px] text-mutedText font-medium tracking-wide">Olá, estudante!</p>
+                        <h1 class="text-lg font-bold text-darkText flex items-center gap-1.5" id="user-display-name">
+                            <span>Estudante</span>
+                            <svg class="w-3.5 h-3.5 text-brand-600 fill-brand-600" viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.2-6.3-4.6-6.3 4.6 2.3-7.2-6-4.6h7.6z"/></svg>
+                        </h1>
+                    </div>
+                    <button onclick="openSearchModal()" class="w-9 h-9 rounded-full bg-white shadow-sm border border-softBorder flex items-center justify-center text-darkText hover:text-brand-600 transition-colors">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <!-- Card Objetivo Atual -->
+                <div class="bg-white p-4 rounded-2xl border border-softBorder shadow-sm flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                            <i data-lucide="target" class="w-4 h-4"></i>
+                        </div>
+                        <div class="truncate">
+                            <span class="text-[9px] uppercase tracking-wider font-bold text-mutedText block">Objetivo Atual</span>
+                            <span class="text-xs font-bold text-darkText truncate block" id="home-target-title">Definir objetivo...</span>
+                        </div>
+                    </div>
+                    <button onclick="showPage('settings')" class="text-xs text-brand-600 font-semibold hover:underline shrink-0">
+                        Alterar
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <!-- Card de Progresso Elegante -->
+                <div class="bg-white p-5 rounded-3xl border border-softBorder shadow-sm space-y-4 relative overflow-hidden">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <span class="text-[10px] uppercase font-bold tracking-wider text-mutedText">Seu Progresso</span>
+                            <h2 class="text-2xl font-bold text-darkText mt-0.5" id="overall-percent-text">0%</h2>
+                        </div>
+                        <span class="text-[11px] font-semibold text-brand-600 bg-brand-50 px-3 py-1 rounded-full border border-brand-100" id="total-status-pill">
+                            0 de 0 concluídos
+                        </span>
+                    </div>
+
+                    <!-- Barra de progresso fina -->
+                    <div class="w-full h-2 bg-brand-50 rounded-full overflow-hidden">
+                        <div id="overall-progress-bar" class="h-full bg-brand-600 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+                    </div>
+
+                    <!-- Resumo Limpo -->
+                    <div class="grid grid-cols-3 gap-2 pt-2 border-t border-softBorder/60 text-center">
+                        <div>
+                            <p class="text-[10px] text-mutedText font-medium">Disciplinas</p>
+                            <p class="text-xs font-bold text-darkText mt-0.5" id="stat-disciplines-count">0</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-mutedText font-medium">Em andamento</p>
+                            <p class="text-xs font-bold text-darkText mt-0.5" id="stat-in-progress-count">0</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-mutedText font-medium">Concluídos</p>
+                            <p class="text-xs font-bold text-darkText mt-0.5" id="stat-completed-count">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção Minhas Disciplinas Rápidas -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold tracking-wide uppercase text-mutedText">Minhas Disciplinas</h3>
+                        <button onclick="showPage('disciplines')" class="text-xs font-semibold text-brand-600 hover:text-brand-700">Ver todas</button>
+                    </div>
+
+                    <div id="home-disciplines-list" class="space-y-3">
+                        <!-- Injetado via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. DISCIPLINAS -->
+        <div id="page-disciplines" class="page hidden-page">
+            <div class="p-6 pb-4 bg-brand-50/80 backdrop-blur sticky top-0 z-20 border-b border-softBorder/60 flex items-center justify-between">
+                <div>
+                    <h1 class="text-lg font-bold text-darkText">Disciplinas</h1>
+                    <p class="text-[11px] text-mutedText">Gerencie suas matérias e etapas</p>
+                </div>
+                <button onclick="openDisciplineModal()" class="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Nova</span>
+                </button>
+            </div>
+
+            <div class="p-6">
+                <div id="disciplines-full-list" class="space-y-3.5">
+                    <!-- Injetado via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. CONTEÚDOS DA DISCIPLINA -->
+        <div id="page-contents" class="page hidden-page">
+            <div class="p-4 bg-brand-50/80 backdrop-blur sticky top-0 z-20 border-b border-softBorder/60 flex items-center justify-between">
+                <button onclick="showPage('disciplines')" class="w-8 h-8 rounded-xl bg-white border border-softBorder flex items-center justify-center text-darkText hover:text-brand-600 transition-colors">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                </button>
+                <h1 class="text-xs font-bold text-darkText truncate max-w-[200px]" id="contents-discipline-title">Nome da Disciplina</h1>
+                <button onclick="openDisciplineMenuCurrent()" class="w-8 h-8 rounded-xl bg-white border border-softBorder flex items-center justify-center text-darkText hover:text-brand-600 transition-colors">
+                    <i data-lucide="more-vertical" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-5">
+                <!-- Banner de progresso da matéria -->
+                <div id="discipline-header-card" class="p-4 rounded-2xl bg-white border border-softBorder shadow-sm flex items-center gap-3.5">
+                    <div id="discipline-color-pill" class="w-2.5 h-10 rounded-full bg-brand-400"></div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[10px] uppercase font-bold text-mutedText">Progresso da matéria</span>
+                            <span class="text-xs font-bold text-darkText" id="discipline-percent-badge">0%</span>
+                        </div>
+                        <div class="w-full h-2 bg-brand-50 rounded-full overflow-hidden">
+                            <div id="discipline-progress-bar" class="h-full bg-brand-600 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botão Adicionar Conteúdo -->
+                <button onclick="openContentModal()" class="w-full py-3 px-4 bg-white hover:bg-brand-50/50 border border-dashed border-brand-300 rounded-2xl text-brand-600 text-xs font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span>Adicionar Novo Conteúdo</span>
+                </button>
+
+                <!-- Lista de Conteúdos -->
+                <div id="contents-list" class="space-y-3">
+                    <!-- Injetado via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. PROGRESSO -->
+        <div id="page-progress" class="page hidden-page">
+            <div class="p-6 pb-4 bg-brand-50/80 backdrop-blur sticky top-0 z-20 border-b border-softBorder/60">
+                <h1 class="text-lg font-bold text-darkText">Visão de Desempenho</h1>
+                <p class="text-[11px] text-mutedText">Estatísticas detalhadas do seu caderninho</p>
+            </div>
+
+            <div class="p-6 space-y-5">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-white p-4 rounded-2xl border border-softBorder shadow-sm">
+                        <p class="text-[10px] uppercase font-bold text-mutedText">Total Conteúdos</p>
+                        <p class="text-xl font-bold text-darkText mt-1" id="analytics-total">0</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-softBorder shadow-sm">
+                        <p class="text-[10px] uppercase font-bold text-emerald-600">Concluídos</p>
+                        <p class="text-xl font-bold text-emerald-600 mt-1" id="analytics-completed">0</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-softBorder shadow-sm">
+                        <p class="text-[10px] uppercase font-bold text-amber-600">Em Andamento</p>
+                        <p class="text-xl font-bold text-amber-600 mt-1" id="analytics-progress">0</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-softBorder shadow-sm">
+                        <p class="text-[10px] uppercase font-bold text-mutedText">Não Iniciados</p>
+                        <p class="text-xl font-bold text-slate-400 mt-1" id="analytics-not-started">0</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-3xl border border-softBorder shadow-sm space-y-4">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-darkText">Progresso por Matéria</h2>
+                    <div id="analytics-disciplines-list" class="space-y-3.5">
+                        <!-- Injetado via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. AJUSTES / CONFIGURAÇÕES -->
+        <div id="page-settings" class="page hidden-page">
+            <div class="p-6 pb-4 bg-brand-50/80 backdrop-blur sticky top-0 z-20 border-b border-softBorder/60">
+                <h1 class="text-lg font-bold text-darkText">Ajustes</h1>
+                <p class="text-[11px] text-mutedText">Configure seu perfil e dados</p>
+            </div>
+
+            <div class="p-6 space-y-5">
+                <div class="bg-white p-5 rounded-3xl border border-softBorder shadow-sm space-y-4">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-darkText">Perfil de Estudos</h2>
+
+                    <div class="space-y-1">
+                        <label class="text-[11px] font-semibold text-mutedText">Seu Nome / Apelido</label>
+                        <input type="text" id="setting-user-name" placeholder="Ex: Lucas" class="w-full px-3.5 py-2.5 rounded-xl border border-softBorder text-xs text-darkText focus:outline-none focus:border-brand-500 bg-brand-50/30">
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-[11px] font-semibold text-mutedText">Objetivo Principal</label>
+                        <input type="text" id="setting-target-title" placeholder="Ex: Concurso PRF, ENEM" class="w-full px-3.5 py-2.5 rounded-xl border border-softBorder text-xs text-darkText focus:outline-none focus:border-brand-500 bg-brand-50/30">
+                    </div>
+
+                    <button onclick="saveSettings()" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-all">
+                        Salvar Alterações
+                    </button>
+                </div>
+
+                <div class="bg-white p-5 rounded-3xl border border-rose-100 shadow-sm space-y-3">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-rose-600">Gerenciar Dados</h2>
+                    <p class="text-xs text-mutedText">Apagar todas as disciplinas e conteúdos salvos.</p>
+
+                    <button onclick="clearAllData()" class="w-full py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-semibold transition-colors">
+                        Limpar Todos os Dados
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MENU INFERIOR FIXO -->
+        <nav id="bottom-nav" class="absolute bottom-0 inset-x-0 bg-white/95 backdrop-blur border-t border-softBorder px-6 py-2.5 z-40 flex justify-between items-center hidden pb-[calc(10px+var(--sab))]">
+            <button onclick="showPage('home')" id="nav-home" class="flex flex-col items-center gap-1 text-brand-600 transition-colors">
+                <i data-lucide="home" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium">Início</span>
+            </button>
+            <button onclick="showPage('disciplines')" id="nav-disciplines" class="flex flex-col items-center gap-1 text-mutedText hover:text-brand-600 transition-colors">
+                <i data-lucide="book-open" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium">Disciplinas</span>
+            </button>
+            <button onclick="showPage('progress')" id="nav-progress" class="flex flex-col items-center gap-1 text-mutedText hover:text-brand-600 transition-colors">
+                <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium">Progresso</span>
+            </button>
+            <button onclick="showPage('settings')" id="nav-settings" class="flex flex-col items-center gap-1 text-mutedText hover:text-brand-600 transition-colors">
+                <i data-lucide="sliders" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium">Ajustes</span>
+            </button>
+        </nav>
+
+        <!-- MODAIS BOTTOM SHEET -->
+
+        <!-- 1. Modal Criar / Editar Disciplina -->
+        <div id="modal-discipline" class="fixed inset-0 bg-darkText/30 backdrop-blur-sm z-50 flex items-end justify-center hidden">
+            <div class="bg-white w-full max-w-md rounded-t-3xl p-6 space-y-4 shadow-xl sheet-up">
+                <div class="w-10 h-1 bg-softBorder rounded-full mx-auto"></div>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-darkText" id="modal-discipline-title">Nova Disciplina</h3>
+                    <button onclick="closeDisciplineModal()" class="text-mutedText hover:text-darkText">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[11px] font-semibold text-mutedText block mb-1">Nome da Disciplina</label>
+                        <input type="text" id="input-discipline-name" placeholder="Ex: Direito Constitucional" class="w-full px-3.5 py-2.5 rounded-xl border border-softBorder text-xs text-darkText focus:outline-none focus:border-brand-500 bg-brand-50/30">
+                    </div>
+
+                    <div>
+                        <label class="text-[11px] font-semibold text-mutedText block mb-2">Cor da Disciplina (Paleta Pastel)</label>
+                        <div class="grid grid-cols-5 gap-2.5" id="color-picker-grid">
+                            <!-- Injetado via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button onclick="closeDisciplineModal()" class="flex-1 py-2.5 bg-brand-50 text-darkText text-xs font-semibold rounded-xl">Cancelar</button>
+                    <button onclick="saveDiscipline()" class="flex-1 py-2.5 bg-brand-600 text-white text-xs font-semibold rounded-xl shadow-sm">Salvar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Modal Criar Conteúdo -->
+        <div id="modal-content" class="fixed inset-0 bg-darkText/30 backdrop-blur-sm z-50 flex items-end justify-center hidden">
+            <div class="bg-white w-full max-w-md rounded-t-3xl p-6 space-y-4 shadow-xl sheet-up">
+                <div class="w-10 h-1 bg-softBorder rounded-full mx-auto"></div>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-darkText">Novo Conteúdo</h3>
+                    <button onclick="closeContentModal()" class="text-mutedText hover:text-darkText">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-[11px] font-semibold text-mutedText block mb-1">Título do Conteúdo / Tópico</label>
+                        <input type="text" id="input-content-title" placeholder="Ex: Controle de Constitucionalidade" class="w-full px-3.5 py-2.5 rounded-xl border border-softBorder text-xs text-darkText focus:outline-none focus:border-brand-500 bg-brand-50/30">
+                    </div>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button onclick="closeContentModal()" class="flex-1 py-2.5 bg-brand-50 text-darkText text-xs font-semibold rounded-xl">Cancelar</button>
+                    <button onclick="saveContent()" class="flex-1 py-2.5 bg-brand-600 text-white text-xs font-semibold rounded-xl shadow-sm">Salvar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Modal Pesquisa Global -->
+        <div id="modal-search" class="fixed inset-0 bg-darkText/30 backdrop-blur-sm z-50 flex items-start justify-center p-4 pt-12 hidden">
+            <div class="bg-white w-full max-w-md rounded-3xl p-5 space-y-3 shadow-xl">
+                <div class="relative">
+                    <i data-lucide="search" class="w-4 h-4 text-mutedText absolute left-3.5 top-3"></i>
+                    <input type="text" id="input-search-query" oninput="handleSearch()" placeholder="Buscar disciplina ou conteúdo..." class="w-full pl-10 pr-10 py-2.5 rounded-xl bg-brand-50/50 text-xs text-darkText focus:outline-none border border-softBorder">
+                    <button onclick="closeSearchModal()" class="absolute right-3 top-2.5 text-mutedText hover:text-darkText">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <div id="search-results-list" class="max-h-60 overflow-y-auto space-y-2">
+                    <p class="text-xs text-center text-mutedText py-4">Digite para pesquisar...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Modal Ações da Disciplina -->
+        <div id="modal-discipline-menu" class="fixed inset-0 bg-darkText/30 backdrop-blur-sm z-50 flex items-end justify-center hidden">
+            <div class="bg-white w-full max-w-md rounded-t-3xl p-6 space-y-3 shadow-xl sheet-up">
+                <div class="w-10 h-1 bg-softBorder rounded-full mx-auto"></div>
+                <h3 class="text-xs font-bold text-darkText mb-1" id="menu-discipline-name-header">Ações da Disciplina</h3>
+                <button onclick="triggerEditCurrentDiscipline()" class="w-full py-3 px-4 bg-brand-50/50 rounded-xl text-xs font-semibold text-darkText flex items-center gap-3">
+                    <i data-lucide="edit-3" class="w-4 h-4 text-brand-600"></i>
+                    <span>Editar Nome e Cor</span>
+                </button>
+                <button onclick="triggerDeleteCurrentDiscipline()" class="w-full py-3 px-4 bg-rose-50 rounded-xl text-xs font-semibold text-rose-600 flex items-center gap-3">
+                    <i data-lucide="trash-2" class="w-4 h-4 text-rose-600"></i>
+                    <span>Excluir Disciplina</span>
+                </button>
+                <button onclick="closeDisciplineMenuCurrent()" class="w-full py-2 text-xs text-mutedText font-medium">Cancelar</button>
+            </div>
+        </div>
+
+        <!-- Mensagem Toast -->
+        <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-darkText text-white text-xs px-4 py-2.5 rounded-full shadow-lg opacity-0 transition-opacity pointer-events-none z-50 flex items-center gap-2">
+            <span id="toast-message">Notificação</span>
+        </div>
+
+    </div>
+
+    <script>
+        // Paleta pastel delicada pré-definida
+        const PASTEL_COLORS = [
+            { name: 'Rosa Pastel', hex: '#fce4ec' },
+            { name: 'Lilás', hex: '#f3e5f5' },
+            { name: 'Azul Pastel', hex: '#e1f5fe' },
+            { name: 'Verde Sálvia', hex: '#e8f5e9' },
+            { name: 'Pêssego', hex: '#ffe0b2' },
+            { name: 'Amarelo Manteiga', hex: '#fffde7' },
+            { name: 'Coral Suave', hex: '#ffabe1' },
+            { name: 'Bege', hex: '#f5ebe0' },
+            { name: 'Azul Acinzentado', hex: '#eceff1' }
+        ];
+
+        // Estado da Aplicação
+        let appState = {
+            user: {
+                name: 'Estudante',
+                target: 'Meu Objetivo de Estudos',
+                firstAccess: true
+            },
+            disciplines: [],
+            activeDisciplineId: null,
+            editingDisciplineId: null,
+            editingContentId: null,
+            selectedColorHex: PASTEL_COLORS[1].hex
+        };
+
+        // Inicialização
+        window.addEventListener('DOMContentLoaded', () => {
+            loadStateFromStorage();
+            lucide.createIcons();
+
+            if (!appState.user.firstAccess) {
+                document.getElementById('page-splash').classList.add('hidden-page');
+                document.getElementById('bottom-nav').classList.remove('hidden');
+                showPage('home');
+            } else {
+                renderColorPicker();
+            }
+        });
+
+        function saveStateToStorage() {
+            localStorage.setItem('mycontent_app_state', JSON.stringify(appState));
+        }
+
+        function loadStateFromStorage() {
+            const saved = localStorage.getItem('mycontent_app_state');
+            if (saved) {
+                try {
+                    appState = JSON.parse(saved);
+                } catch (e) {
+                    console.error("Erro ao carregar dados", e);
+                }
+            }
+            renderColorPicker();
+        }
+
+        function startApp() {
+            appState.user.firstAccess = false;
+            saveStateToStorage();
+            document.getElementById('page-splash').classList.add('hidden-page');
+            document.getElementById('bottom-nav').classList.remove('hidden');
+            showPage('home');
+        }
+
+        function showPage(pageId) {
+            const pages = ['home', 'disciplines', 'contents', 'progress', 'settings'];
+            
+            pages.forEach(p => {
+                const el = document.getElementById(`page-${p}`);
+                if (p === pageId) {
+                    el.classList.remove('hidden-page');
+                } else {
+                    el.classList.add('hidden-page');
+                }
+            });
+
+            // Atualizar navegação
+            ['home', 'disciplines', 'progress', 'settings'].forEach(nav => {
+                const btn = document.getElementById(`nav-${nav}`);
+                if (btn) {
+                    if (nav === pageId || (pageId === 'contents' && nav === 'disciplines')) {
+                        btn.className = "flex flex-col items-center gap-1 text-brand-600 transition-colors";
+                    } else {
+                        btn.className = "flex flex-col items-center gap-1 text-mutedText hover:text-brand-600 transition-colors";
+                    }
+                }
+            });
+
+            if (pageId === 'home') renderHome();
+            if (pageId === 'disciplines') renderDisciplinesList();
+            if (pageId === 'progress') renderProgressPage();
+            if (pageId === 'settings') loadSettingsForm();
+
+            lucide.createIcons();
+        }
+
+        function calculateContentProgress(content) {
+            let progress = 0;
+            if (content.sawContent) progress += 33;
+            if (content.reviewed) progress += 33;
+            if (content.solvedQuestions) progress += 34;
+            return progress;
+        }
+
+        function calculateDisciplineProgress(discipline) {
+            if (!discipline.contents || discipline.contents.length === 0) return 0;
+            const total = discipline.contents.reduce((acc, curr) => acc + calculateContentProgress(curr), 0);
+            return Math.round(total / discipline.contents.length);
+        }
+
+        function calculateOverallProgress() {
+            if (appState.disciplines.length === 0) return 0;
+            const total = appState.disciplines.reduce((acc, curr) => acc + calculateDisciplineProgress(curr), 0);
+            return Math.round(total / appState.disciplines.length);
+        }
+
+        function renderHome() {
+            document.getElementById('user-display-name').querySelector('span').innerText = appState.user.name || 'Estudante';
+            document.getElementById('home-target-title').innerText = appState.user.target || 'Definir objetivo...';
+
+            const overallPercent = calculateOverallProgress();
+            document.getElementById('overall-percent-text').innerText = `${overallPercent}%`;
+            document.getElementById('overall-progress-bar').style.width = `${overallPercent}%`;
+
+            let totalContents = 0;
+            let completedContents = 0;
+            let inProgressContents = 0;
+
+            appState.disciplines.forEach(d => {
+                d.contents.forEach(c => {
+                    totalContents++;
+                    const prog = calculateContentProgress(c);
+                    if (prog === 100) completedContents++;
+                    else if (prog > 0) inProgressContents++;
+                });
+            });
+
+            document.getElementById('total-status-pill').innerText = `${completedContents} de ${totalContents} concluídos`;
+            document.getElementById('stat-disciplines-count').innerText = appState.disciplines.length;
+            document.getElementById('stat-in-progress-count').innerText = inProgressContents;
+            document.getElementById('stat-completed-count').innerText = completedContents;
+
+            const container = document.getElementById('home-disciplines-list');
+            container.innerHTML = '';
+
+            if (appState.disciplines.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl p-5 text-center border border-softBorder space-y-2">
+                        <p class="text-xs font-semibold text-darkText">Nenhuma disciplina cadastrada</p>
+                        <p class="text-[11px] text-mutedText">Adicione suas matérias para organizar seus estudos.</p>
+                        <button onclick="openDisciplineModal()" class="mt-1 px-3 py-1.5 bg-brand-50 text-brand-600 font-semibold rounded-xl text-xs">
+                            + Adicionar Disciplina
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            appState.disciplines.slice(0, 4).forEach(discipline => {
+                const prog = calculateDisciplineProgress(discipline);
+                const card = document.createElement('div');
+                card.onclick = () => openDisciplineContents(discipline.id);
+                card.className = "bg-white p-4 rounded-2xl border border-softBorder shadow-sm hover:border-brand-200 transition-all cursor-pointer flex items-center gap-3";
+                card.innerHTML = `
+                    <div class="w-2.5 h-9 rounded-full" style="background-color: ${discipline.color}"></div>
+                    <div class="flex-1 overflow-hidden">
+                        <div class="flex justify-between items-center mb-1">
+                            <h4 class="text-xs font-bold text-darkText truncate">${discipline.name}</h4>
+                            <span class="text-[11px] font-bold text-mutedText">${prog}%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-brand-50 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full transition-all duration-300" style="width: ${prog}%; background-color: ${discipline.color}"></div>
+                        </div>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-softBorder"></i>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderDisciplinesList() {
+            const container = document.getElementById('disciplines-full-list');
+            container.innerHTML = '';
+
+            if (appState.disciplines.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-3xl p-8 text-center border border-softBorder space-y-3">
+                        <p class="text-xs font-bold text-darkText">Seu caderninho está vazio!</p>
+                        <p class="text-[11px] text-mutedText">Crie disciplinas como Direito, Matemática ou Português.</p>
+                        <button onclick="openDisciplineModal()" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold shadow-sm">
+                            Criar Disciplina
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            appState.disciplines.forEach(discipline => {
+                const prog = calculateDisciplineProgress(discipline);
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-2xl border border-softBorder shadow-sm hover:shadow transition-all flex items-center justify-between gap-3 cursor-pointer";
+                card.onclick = () => openDisciplineContents(discipline.id);
+
+                card.innerHTML = `
+                    <div class="flex items-center gap-3 overflow-hidden flex-1">
+                        <div class="w-3 h-10 rounded-full shrink-0" style="background-color: ${discipline.color}"></div>
+                        <div class="overflow-hidden flex-1">
+                            <h3 class="text-xs font-bold text-darkText truncate">${discipline.name}</h3>
+                            <p class="text-[10px] text-mutedText mt-0.5">${discipline.contents.length} conteúdos</p>
+                            <div class="w-full h-1.5 bg-brand-50 rounded-full mt-1.5 overflow-hidden">
+                                <div class="h-full rounded-full transition-all duration-300" style="width: ${prog}%; background-color: ${discipline.color}"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-mutedText">${prog}%</span>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-softBorder"></i>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderColorPicker() {
+            const grid = document.getElementById('color-picker-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            PASTEL_COLORS.forEach(c => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `w-full h-8 rounded-xl border-2 transition-transform active:scale-90 ${appState.selectedColorHex === c.hex ? 'scale-110 border-brand-600 shadow-sm' : 'border-transparent'}`;
+                btn.style.backgroundColor = c.hex;
+                btn.onclick = () => {
+                    appState.selectedColorHex = c.hex;
+                    renderColorPicker();
+                };
+                grid.appendChild(btn);
+            });
+        }
+
+        function openDisciplineModal(id = null) {
+            appState.editingDisciplineId = id;
+            const modal = document.getElementById('modal-discipline');
+            const title = document.getElementById('modal-discipline-title');
+            const input = document.getElementById('input-discipline-name');
+
+            if (id) {
+                const disc = appState.disciplines.find(d => d.id === id);
+                title.innerText = "Editar Disciplina";
+                input.value = disc.name;
+                appState.selectedColorHex = disc.color;
+            } else {
+                title.innerText = "Nova Disciplina";
+                input.value = '';
+                appState.selectedColorHex = PASTEL_COLORS[1].hex;
+            }
+
+            renderColorPicker();
+            modal.classList.remove('hidden');
+        }
+
+        function closeDisciplineModal() {
+            document.getElementById('modal-discipline').classList.add('hidden');
+        }
+
+        function saveDiscipline() {
+            const input = document.getElementById('input-discipline-name');
+            const name = input.value.trim();
+
+            if (!name) {
+                showToast("Digite o nome da disciplina");
+                return;
+            }
+
+            if (appState.editingDisciplineId) {
+                const disc = appState.disciplines.find(d => d.id === appState.editingDisciplineId);
+                if (disc) {
+                    disc.name = name;
+                    disc.color = appState.selectedColorHex;
+                }
+            } else {
+                const newDiscipline = {
+                    id: 'disc_' + Date.now(),
+                    name: name,
+                    color: appState.selectedColorHex,
+                    contents: []
+                };
+                appState.disciplines.push(newDiscipline);
+            }
+
+            saveStateToStorage();
+            closeDisciplineModal();
+            renderDisciplinesList();
+            renderHome();
+            showToast("Disciplina salva!");
+        }
+
+        function openDisciplineContents(id) {
+            appState.activeDisciplineId = id;
+            renderContentsPage();
+            showPage('contents');
+        }
+
+        function renderContentsPage() {
+            const discipline = appState.disciplines.find(d => d.id === appState.activeDisciplineId);
+            if (!discipline) return;
+
+            document.getElementById('contents-discipline-title').innerText = discipline.name;
+            document.getElementById('discipline-color-pill').style.backgroundColor = discipline.color;
+
+            const prog = calculateDisciplineProgress(discipline);
+            document.getElementById('discipline-percent-badge').innerText = `${prog}%`;
+            const bar = document.getElementById('discipline-progress-bar');
+            bar.style.width = `${prog}%`;
+
+            const container = document.getElementById('contents-list');
+            container.innerHTML = '';
+
+            if (discipline.contents.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl p-6 text-center border border-softBorder space-y-1">
+                        <p class="text-xs font-semibold text-darkText">Nenhum conteúdo cadastrado</p>
+                        <p class="text-[11px] text-mutedText">Adicione os tópicos de estudo desta disciplina.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            discipline.contents.forEach(content => {
+                const cProg = calculateContentProgress(content);
+                const isCompleted = cProg === 100;
+
+                const card = document.createElement('div');
+                card.className = `bg-white p-4 rounded-2xl border transition-all space-y-3 ${isCompleted ? 'border-emerald-200 bg-emerald-50/10' : 'border-softBorder shadow-sm'}`;
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start gap-2">
+                        <div>
+                            <h4 class="text-xs font-bold ${isCompleted ? 'text-emerald-800 line-through' : 'text-darkText'}">${content.title}</h4>
+                            <span class="text-[10px] font-semibold ${isCompleted ? 'text-emerald-600' : 'text-brand-600'}">
+                                ${isCompleted ? 'Conteúdo concluído (100%)' : `Progresso: ${cProg}%`}
+                            </span>
+                        </div>
+                        <button onclick="deleteContent('${content.id}')" class="text-slate-300 hover:text-rose-500 p-1">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+
+                    <!-- Checklist 3 Passos com Botão Circular -->
+                    <div class="grid grid-cols-3 gap-1 pt-2 border-t border-softBorder/60 text-[11px]">
+                        <div class="flex items-center gap-1.5 cursor-pointer select-none" onclick="toggleContentStep('${content.id}', 'sawContent')">
+                            <div class="step-circle ${content.sawContent ? 'checked' : ''}">
+                                <i data-lucide="check" class="w-3 h-3"></i>
+                            </div>
+                            <span class="text-mutedText font-medium">Vi o conteúdo</span>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 cursor-pointer select-none" onclick="toggleContentStep('${content.id}', 'reviewed')">
+                            <div class="step-circle ${content.reviewed ? 'checked' : ''}">
+                                <i data-lucide="check" class="w-3 h-3"></i>
+                            </div>
+                            <span class="text-mutedText font-medium">Fiz revisão</span>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 cursor-pointer select-none" onclick="toggleContentStep('${content.id}', 'solvedQuestions')">
+                            <div class="step-circle ${content.solvedQuestions ? 'checked' : ''}">
+                                <i data-lucide="check" class="w-3 h-3"></i>
+                            </div>
+                            <span class="text-mutedText font-medium">Questões</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        function toggleContentStep(contentId, stepKey) {
+            const discipline = appState.disciplines.find(d => d.id === appState.activeDisciplineId);
+            if (!discipline) return;
+
+            const content = discipline.contents.find(c => c.id === contentId);
+            if (!content) return;
+
+            const prevProg = calculateContentProgress(content);
+            content[stepKey] = !content[stepKey];
+            const newProg = calculateContentProgress(content);
+
+            if (prevProg < 100 && newProg === 100) {
+                confetti({ particleCount: 50, spread: 50, origin: { y: 0.7 } });
+                showToast("Conteúdo 100% concluído!");
+            }
+
+            saveStateToStorage();
+            renderContentsPage();
+        }
+
+        function openContentModal() {
+            document.getElementById('input-content-title').value = '';
+            document.getElementById('modal-content').classList.remove('hidden');
+        }
+
+        function closeContentModal() {
+            document.getElementById('modal-content').classList.add('hidden');
+        }
+
+        function saveContent() {
+            const title = document.getElementById('input-content-title').value.trim();
+            if (!title) {
+                showToast("Digite o título do conteúdo");
+                return;
+            }
+
+            const discipline = appState.disciplines.find(d => d.id === appState.activeDisciplineId);
+            if (!discipline) return;
+
+            discipline.contents.push({
+                id: 'cnt_' + Date.now(),
+                title: title,
+                sawContent: false,
+                reviewed: false,
+                solvedQuestions: false
+            });
+
+            saveStateToStorage();
+            closeContentModal();
+            renderContentsPage();
+            showToast("Conteúdo adicionado!");
+        }
+
+        function deleteContent(contentId) {
+            const discipline = appState.disciplines.find(d => d.id === appState.activeDisciplineId);
+            if (!discipline) return;
+
+            discipline.contents = discipline.contents.filter(c => c.id !== contentId);
+            saveStateToStorage();
+            renderContentsPage();
+            showToast("Conteúdo removido.");
+        }
+
+        function openDisciplineMenuCurrent() {
+            const disc = appState.disciplines.find(d => d.id === appState.activeDisciplineId);
+            if (!disc) return;
+            document.getElementById('menu-discipline-name-header').innerText = disc.name;
+            document.getElementById('modal-discipline-menu').classList.remove('hidden');
+        }
+
+        function closeDisciplineMenuCurrent() {
+            document.getElementById('modal-discipline-menu').classList.add('hidden');
+        }
+
+        function triggerEditCurrentDiscipline() {
+            closeDisciplineMenuCurrent();
+            openDisciplineModal(appState.activeDisciplineId);
+        }
+
+        function triggerDeleteCurrentDiscipline() {
+            closeDisciplineMenuCurrent();
+            if (confirm("Deseja excluir esta disciplina e todos os seus conteúdos?")) {
+                appState.disciplines = appState.disciplines.filter(d => d.id !== appState.activeDisciplineId);
+                saveStateToStorage();
+                showPage('disciplines');
+                showToast("Disciplina excluída.");
+            }
+        }
+
+        function renderProgressPage() {
+            let totalContents = 0;
+            let completed = 0;
+            let inProgress = 0;
+            let notStarted = 0;
+
+            appState.disciplines.forEach(d => {
+                d.contents.forEach(c => {
+                    totalContents++;
+                    const prog = calculateContentProgress(c);
+                    if (prog === 100) completed++;
+                    else if (prog > 0) inProgress++;
+                    else notStarted++;
+                });
+            });
+
+            document.getElementById('analytics-total').innerText = totalContents;
+            document.getElementById('analytics-completed').innerText = completed;
+            document.getElementById('analytics-progress').innerText = inProgress;
+            document.getElementById('analytics-not-started').innerText = notStarted;
+
+            const list = document.getElementById('analytics-disciplines-list');
+            list.innerHTML = '';
+
+            if (appState.disciplines.length === 0) {
+                list.innerHTML = `<p class="text-xs text-mutedText text-center py-4">Nenhum dado disponível.</p>`;
+                return;
+            }
+
+            appState.disciplines.forEach(d => {
+                const prog = calculateDisciplineProgress(d);
+                const item = document.createElement('div');
+                item.className = "space-y-1";
+                item.innerHTML = `
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="font-bold text-darkText">${d.name}</span>
+                        <span class="font-semibold text-mutedText">${prog}%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-brand-50 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-300" style="width: ${prog}%; background-color: ${d.color}"></div>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function loadSettingsForm() {
+            document.getElementById('setting-user-name').value = appState.user.name || '';
+            document.getElementById('setting-target-title').value = appState.user.target || '';
+        }
+
+        function saveSettings() {
+            const name = document.getElementById('setting-user-name').value.trim();
+            const target = document.getElementById('setting-target-title').value.trim();
+
+            appState.user.name = name || 'Estudante';
+            appState.user.target = target || 'Meu Objetivo de Estudos';
+
+            saveStateToStorage();
+            showToast("Configurações atualizadas!");
+        }
+
+        function clearAllData() {
+            if (confirm("Tem certeza que deseja apagar todos os dados registrados?")) {
+                appState.disciplines = [];
+                saveStateToStorage();
+                showPage('home');
+                showToast("Dados resetados.");
+            }
+        }
+
+        function openSearchModal() {
+            document.getElementById('input-search-query').value = '';
+            document.getElementById('search-results-list').innerHTML = `<p class="text-xs text-center text-mutedText py-4">Digite para pesquisar...</p>`;
+            document.getElementById('modal-search').classList.remove('hidden');
+            document.getElementById('input-search-query').focus();
+        }
+
+        function closeSearchModal() {
+            document.getElementById('modal-search').classList.add('hidden');
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('input-search-query').value.toLowerCase().trim();
+            const resultsContainer = document.getElementById('search-results-list');
+            resultsContainer.innerHTML = '';
+
+            if (!query) {
+                resultsContainer.innerHTML = `<p class="text-xs text-center text-mutedText py-4">Digite para pesquisar...</p>`;
+                return;
+            }
+
+            let matches = [];
+
+            appState.disciplines.forEach(d => {
+                if (d.name.toLowerCase().includes(query)) {
+                    matches.push({ type: 'discipline', discipline: d });
+                }
+                d.contents.forEach(c => {
+                    if (c.title.toLowerCase().includes(query)) {
+                        matches.push({ type: 'content', discipline: d, content: c });
+                    }
+                });
+            });
+
+            if (matches.length === 0) {
+                resultsContainer.innerHTML = `<p class="text-xs text-center text-mutedText py-4">Nenhum item encontrado.</p>`;
+                return;
+            }
+
+            matches.forEach(m => {
+                const item = document.createElement('div');
+                item.className = "p-3 bg-brand-50/50 hover:bg-brand-50 rounded-xl cursor-pointer transition-colors flex items-center justify-between";
+
+                if (m.type === 'discipline') {
+                    item.onclick = () => {
+                        closeSearchModal();
+                        openDisciplineContents(m.discipline.id);
+                    };
+                    item.innerHTML = `
+                        <div>
+                            <span class="text-[9px] uppercase tracking-wider font-bold text-brand-600 bg-brand-100 px-1.5 py-0.5 rounded">Disciplina</span>
+                            <p class="text-xs font-bold text-darkText mt-0.5">${m.discipline.name}</p>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-softBorder"></i>
+                    `;
+                } else {
+                    item.onclick = () => {
+                        closeSearchModal();
+                        openDisciplineContents(m.discipline.id);
+                    };
+                    item.innerHTML = `
+                        <div>
+                            <span class="text-[9px] uppercase tracking-wider font-bold text-mutedText bg-slate-100 px-1.5 py-0.5 rounded">${m.discipline.name}</span>
+                            <p class="text-xs font-semibold text-darkText mt-0.5">${m.content.title}</p>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-softBorder"></i>
+                    `;
+                }
+                resultsContainer.appendChild(item);
+            });
+
+            lucide.createIcons();
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = message;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 2200);
+        }
+    </script>
+</body>
+</html>
+```
